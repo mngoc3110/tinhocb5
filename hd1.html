@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Demo Trang Web Giáng Sinh – Chỉ chữ vs Có hình</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      background: #f5f5f5;
+      transition: background 0.4s ease;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      position: relative;
+      z-index: 1; /* để nằm dưới lớp tuyết */
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background: #c62828;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-secondary {
+      background: #1976d2;
+    }
+
+    .text-only, .layout-enhanced {
+      padding: 20px;
+      border-radius: 10px;
+      background: white;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+
+    .layout-enhanced {
+      display: none;
+      color: #222;
+    }
+
+    /* Khối giới thiệu + ảnh bên dưới */
+    .layout-main {
+      margin-top: 16px;
+    }
+
+    .image-row {
+      margin-top: 16px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .image-stack {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    img {
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .image-card {
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      background: #fafafa;
+      flex: 1 1 220px;
+    }
+
+    /* Khi bật bố cục */
+    body.layout-on .text-only {
+      display: none;
+    }
+    body.layout-on .layout-enhanced {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    /* GALLERY */
+    .gallery {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #ddd;
+    }
+
+    .gallery.visible {
+      display: block;
+    }
+
+    .gallery h2 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .gallery-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .gallery-track {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .gallery-item {
+      flex: 1 1 calc(33.333% - 8px);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+    }
+
+    .gallery-nav-btn {
+      background: #eeeeee;
+      border: 1px solid #ccc;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    /* Ẩn tất cả ảnh bên dưới khi Gallery bật */
+    body.gallery-on .layout-main {
+      display: none;
+    }
+
+    /* LỚP TUYẾT RƠI */
+    .snow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* không chặn click */
+      overflow: hidden;
+      z-index: 999;
+    }
+
+    .snowflake {
+      position: absolute;
+      top: -10px;
+      color: #fff;
+      opacity: 0.9;
+      user-select: none;
+      animation-name: fall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(110vh);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Demo: Trang web chỉ văn bản và trang có hình ảnh</h1>
+  <p>Nhấn nút để bật bố cục có hình ảnh, thêm nhiều ảnh, rồi thử xem tất cả ở dạng gallery.</p>
+
+  <div class="button-row">
+    <button id="btnLayout" class="btn">🎄 Hiện bố cục Giáng Sinh đẹp</button>
+    <button id="btnGalleryToggle" class="btn btn-secondary">🖼 Xem ảnh dạng Gallery</button>
+  </div>
+
+  <!-- GALLERY -->
+  <div id="gallery" class="gallery">
+    <h2>Gallery ảnh Giáng Sinh (tối đa 3 ảnh / lần xem)</h2>
+    <div class="gallery-inner">
+      <button id="galleryPrev" class="gallery-nav-btn">‹</button>
+      <div id="galleryTrack" class="gallery-track"></div>
+      <button id="galleryNext" class="gallery-nav-btn">›</button>
+    </div>
+  </div>
+
+  <!-- PHIÊN BẢN 1 -->
+  <div class="text-only">
+    <h2>Trang web Giáng Sinh – phiên bản chỉ văn bản</h2>
+    <p>Đây là phiên bản đơn giản chỉ có chữ, giúp học sinh thấy giao diện khi chưa có hình ảnh.</p>
+    <ul>
+      <li>Giới thiệu về Giáng Sinh</li>
+      <li>Thời gian & địa điểm sự kiện</li>
+      <li>Các hoạt động</li>
+    </ul>
+  </div>
+
+  <!-- PHIÊN BẢN 2 -->
+  <div class="layout-enhanced">
+    <h2>🎄 Đêm Giáng Sinh ấm áp tại trường</h2>
+    <p>Phiên bản này giữ nguyên màu sắc nhưng bổ sung hình ảnh để trang hấp dẫn hơn.</p>
+
+    <div class="layout-main">
+      <div class="intro-text">
+        <h3>Thông tin bữa tiệc Giáng Sinh</h3>
+        <p>Buổi tiệc gồm ca hát, trò chơi, trao quà và nhiều hoạt động thú vị.</p>
+        <ul>
+          <li><strong>Thời gian:</strong> 24/12 – 18:30</li>
+          <li><strong>Địa điểm:</strong> Sân trường</li>
+        </ul>
+      </div>
+
+      <div class="image-row">
+        <div class="image-card">
+          <img src="caythong.jpg" alt="Cây thông Noel">
+        </div>
+
+        <div class="image-card">
+          <img src="santa.jpg" alt="Ông già Noel và quà tặng">
+        </div>
+      </div>
+
+      <div class="add-image-section">
+        <h3>Thêm ảnh mới (xếp dọc)</h3>
+        <button id="btnAddImage" class="btn" style="background:#2e7d32;">➕ Thêm ảnh</button>
+        <div class="image-stack" id="imageStack"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LỚP TUYẾT -->
+<div class="snow" id="snowLayer"></div>
+
+<script>
+  const btnLayout = document.getElementById("btnLayout");
+  const btnGalleryToggle = document.getElementById("btnGalleryToggle");
+  const btnAddImage = document.getElementById("btnAddImage");
+
+  const gallery = document.getElementById("gallery");
+  const galleryTrack = document.getElementById("galleryTrack");
+  const galleryPrev = document.getElementById("galleryPrev");
+  const galleryNext = document.getElementById("galleryNext");
+
+  const imageStack = document.getElementById("imageStack");
+
+  // Bật tắt bố cục
+  btnLayout.addEventListener("click", function () {
+    document.body.classList.toggle("layout-on");
+    if (document.body.classList.contains("layout-on")) {
+      btnLayout.textContent = "⬅ Tắt bố cục Giáng Sinh";
+    } else {
+      btnLayout.textContent = "🎄 Hiện bố cục Giáng Sinh đẹp";
+    }
+  });
+
+  // Thêm ảnh mới
+  let addedCount = 0;
+  btnAddImage.addEventListener("click", function () {
+    addedCount++;
+    const card = document.createElement("div");
+    card.className = "image-card";
+
+    const img = document.createElement("img");
+    img.src = addedCount % 2 === 0 ? "santa.jpg" : "caythong.jpg";
+    img.alt = "Ảnh thêm " + addedCount;
+
+    card.appendChild(img);
+    imageStack.appendChild(card);
+  });
+
+  // Gom ảnh từ mọi nơi
+  function collectAllImages() {
+    const imgs = document.querySelectorAll(".image-card img");
+    return Array.from(imgs).map((img) => ({ src: img.src, alt: img.alt }));
+  }
+
+  let galleryImages = [];
+  let galleryIndex = 0;
+
+  function renderGallery() {
+    galleryTrack.innerHTML = "";
+    if (!galleryImages.length) {
+      galleryTrack.textContent = "Chưa có ảnh nào để hiển thị.";
+      return;
+    }
+    const maxVisible = 3;
+
+    for (let i = 0; i < maxVisible && i < galleryImages.length; i++) {
+      const idx = (galleryIndex + i) % galleryImages.length;
+      const item = document.createElement("div");
+      item.className = "gallery-item";
+
+      const img = document.createElement("img");
+      img.src = galleryImages[idx].src;
+      img.alt = galleryImages[idx].alt;
+
+      item.appendChild(img);
+      galleryTrack.appendChild(item);
+    }
+  }
+
+  // Mở / tắt Gallery
+  btnGalleryToggle.addEventListener("click", function () {
+    const isVisible = gallery.classList.toggle("visible");
+
+    if (isVisible) {
+      document.body.classList.add("gallery-on");
+      galleryImages = collectAllImages();
+      galleryIndex = 0;
+      renderGallery();
+      btnGalleryToggle.textContent = "✖ Đóng Gallery";
+    } else {
+      document.body.classList.remove("gallery-on");
+      btnGalleryToggle.textContent = "🖼 Xem ảnh dạng Gallery";
+    }
+  });
+
+  galleryPrev.addEventListener("click", function () {
+    if (!galleryImages.length) return;
+    galleryIndex = (galleryIndex - 1 + galleryImages.length) % galleryImages.length;
+    renderGallery();
+  });
+
+  galleryNext.addEventListener("click", function () {
+    if (!galleryImages.length) return;
+    galleryIndex = (galleryIndex + 1) % galleryImages.length;
+    renderGallery();
+  });
+
+  // TẠO TUYẾT RƠI
+  const snowLayer = document.getElementById("snowLayer");
+
+  function createSnowflakes(count) {
+    for (let i = 0; i < count; i++) {
+      const snowflake = document.createElement("span");
+      snowflake.className = "snowflake";
+      snowflake.textContent = "❄";
+
+      const size = 10 + Math.random() * 20; // 10–30px
+      const left = Math.random() * 100;     // %
+      const duration = 8 + Math.random() * 10; // 8–18s
+      const delay = Math.random() * 10;        // 0–10s
+
+      snowflake.style.fontSize = size + "px";
+      snowflake.style.left = left + "vw";
+      snowflake.style.animationDuration = duration + "s";
+      snowflake.style.animationDelay = delay + "s";
+
+      snowLayer.appendChild(snowflake);
+    }
+  }
+
+  createSnowflakes(50); // số lượng bông tuyết
+</script>
+
+</body>
+</html>
